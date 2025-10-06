@@ -1,12 +1,10 @@
 if Config.Debug then print("[JobSelector] Client script started.") end
 
--- Wait for lb-phone to be ready before trying to add the app.
 while GetResourceState("lb-phone") ~= "started" do
     Wait(500)
 end
 if Config.Debug then print("[JobSelector] lb-phone has started.") end
 
--- Function to register the app with lb-phone.
 local function AddApp()
     exports["lb-phone"]:AddCustomApp({
         identifier = Config.Identifier,
@@ -22,23 +20,30 @@ local function AddApp()
 end
 AddApp()
 
--- This is triggered by the UI when the app is opened.
+-- This function is called by the UI when it needs the job list.
 RegisterNUICallback('getJobs', function(data, cb)
-    -- It uses the standard QBCore callback system to ask the server for the list of available jobs.
-    QBCore.Functions.TriggerCallback('job-selector:server:getAvailableJobs', function(availableJobs)
-        -- Once the server responds, it sends the list back to the UI.
+    -- Create a temporary event handler to wait for the server's response.
+    local function handleJobsResponse(availableJobs)
+        if Config.Debug then print("[JobSelector] Client: Received jobs from server: " .. json.encode(availableJobs)) end
         cb(availableJobs)
-    end)
+        -- Clean up the event handler after we get the response to prevent memory leaks.
+        RemoveEventHandler('job-selector:client:receiveAvailableJobs', handleJobsResponse)
+    end
+
+    -- Register the handler and then trigger the server event to ask for the jobs.
+    AddEventHandler('job-selector:client:receiveAvailableJobs', handleJobsResponse)
+    if Config.Debug then print("[JobSelector] Client: Requesting available jobs from server.") end
+    TriggerServerEvent('job-selector:server:requestAvailableJobs')
 end)
 
--- This is triggered by the UI when a job button is clicked.
+-- This function is called by the UI when a job button is clicked.
 RegisterNUICallback('setJob', function(data, cb)
     if data and data.jobName then
-        -- It tells the server to run the 'changeJob' event.
+        if Config.Debug then print("[JobSelector] Client: Sending job change event to server for job: " .. data.jobName) end
         TriggerServerEvent('job-selector:server:changeJob', data.jobName)
         cb('ok')
     else
+        if Config.Debug then print("[JobSelector] Client ERROR: 'setJob' callback received invalid data.") end
         cb('error')
     end
 end)
-
