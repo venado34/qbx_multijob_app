@@ -1,0 +1,17 @@
+:root {
+    --background-primary: #ffffff;
+    --background-secondary: #f0f0f0;
+    --background-highlight: #e0e0e0;
+
+    --text-primary: #000000;
+    --text-secondary: #6c757d;
+}
+
+[data-theme='dark'] {
+    --background-primary: #121212;
+    --background-secondary: #1e1e1e;
+    --background-highlight: #2c2c2c;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #adb5bd;
+}
