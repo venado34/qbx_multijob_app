@@ -1,45 +1,34 @@
-if Config.Debug then print("[JobSelector] Server script has started successfully and is waiting for ox_lib.") end
+if Config.Debug then print("[JobSelector] Server script has started.") end
 
-AddEventHandler('ox_lib:ready', function()
-    if Config.Debug then print("[JobSelector] ox_lib is ready. Registering server callbacks.") end
+-- This event listens for a request from the client to get the available jobs.
+RegisterNetEvent('job-selector:server:requestJobs', function()
+    local source = source
+    local Player = exports.qbx_core:GetPlayer(source)
+    if not Player then return end
 
-    lib.callback.register('job-selector:server:getAvailableJobs', function(source)
-        local Player = exports.qbx_core:GetPlayer(source)
-        if not Player then return {} end
-
-        local availableJobs = {}
-        if Player.PlayerData.jobs and next(Player.PlayerData.jobs) then
-            for jobName, grade in pairs(Player.PlayerData.jobs) do
-                if jobName ~= Player.PlayerData.job.name then
-                    availableJobs[jobName] = grade
-                end
+    local availableJobs = {}
+    -- Check if the player has any jobs listed in their data.
+    if Player.PlayerData.jobs and next(Player.PlayerData.jobs) then
+        -- Loop through all the player's jobs.
+        for jobName, grade in pairs(Player.PlayerData.jobs) do
+            -- Only add the job to the list if it is NOT their current active job.
+            if jobName ~= Player.PlayerData.job.name then
+                availableJobs[jobName] = grade
             end
         end
-        
-        if Config.Debug then print(string.format("[JobSelector] Server: Sending available jobs to Player %d: %s", source, json.encode(availableJobs))) end
-        return availableJobs
-    end)
+    end
+    
+    if Config.Debug then print(string.format("[JobSelector] Server: Sending jobs to Player %d: %s", source, json.encode(availableJobs))) end
+    -- Send the final list of switchable jobs back to the specific client that requested them.
+    TriggerClientEvent('job-selector:client:receiveJobs', source, availableJobs)
 end)
 
+-- This event is triggered by the client when a job button is pressed.
 RegisterNetEvent('job-selector:server:changeJob', function(jobName)
     local playerId = source
     local Player = exports.qbx_core:GetPlayer(playerId)
 
-    if not Player then
-        if Config.Debug then print(string.format("[JobSelector] Server ERROR: Could not get player object for ID %d.", playerId)) end
-        return
-    end
+    if not Player then return end
 
-    if Config.Debug then
-        print(string.format("[JobSelector] Server: Received request from citizenid '%s' to change active job to '%s'.", Player.PlayerData.citizenid, jobName))
-    end
-
-    local success, errorResult = exports.qbx_core:SetPlayerPrimaryJob(Player.PlayerData.citizenid, jobName)
-
-    if success then
-        if Config.Debug then print("[JobSelector] Server: Successfully changed active job for " .. Player.PlayerData.citizenid) end
-    else
-        if Config.Debug then print("[JobSelector] Server ERROR: SetPlayerPrimaryJob failed. Reason: " .. (errorResult and errorResult.message or "Unknown")) end
-    end
+    exports.qbx_core:SetPlayerPrimaryJob(Player.PlayerData.citizenid, jobName)
 end)
-

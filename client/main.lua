@@ -1,10 +1,12 @@
 if Config.Debug then print("[JobSelector] Client script started.") end
 
+-- Wait for lb-phone to be ready before trying to add the app.
 while GetResourceState("lb-phone") ~= "started" do
     Wait(500)
 end
 if Config.Debug then print("[JobSelector] lb-phone has started.") end
 
+-- Function to register the app with lb-phone.
 local function AddApp()
     exports["lb-phone"]:AddCustomApp({
         identifier = Config.Identifier,
@@ -20,20 +22,23 @@ local function AddApp()
 end
 AddApp()
 
+-- This is triggered by the UI when the app is opened.
 RegisterNUICallback('getJobs', function(data, cb)
-    if Config.Debug then print("[JobSelector] Client: Requesting available jobs from server...") end
-    -- Use the server callback to get a fresh, filtered list of jobs
-    local availableJobs = lib.callback.await('job-selector:server:getAvailableJobs', false)
-    if Config.Debug then print("[JobSelector] Client: Received available jobs: " .. json.encode(availableJobs)) end
-    cb(availableJobs)
+    -- It uses the standard QBCore callback system to ask the server for the list of available jobs.
+    QBCore.Functions.TriggerCallback('job-selector:server:getAvailableJobs', function(availableJobs)
+        -- Once the server responds, it sends the list back to the UI.
+        cb(availableJobs)
+    end)
 end)
 
+-- This is triggered by the UI when a job button is clicked.
 RegisterNUICallback('setJob', function(data, cb)
     if data and data.jobName then
-        if Config.Debug then print("[JobSelector] Client: Triggering server event to set job to " .. data.jobName) end
+        -- It tells the server to run the 'changeJob' event.
         TriggerServerEvent('job-selector:server:changeJob', data.jobName)
         cb('ok')
     else
         cb('error')
     end
 end)
+
