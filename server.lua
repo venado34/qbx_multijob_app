@@ -5,15 +5,19 @@ lib.callback.register('job-selector:server:getAvailableJobs', function(source)
     if not Player then return {} end
 
     local availableJobs = {}
-    for jobName, grade in pairs(Player.PlayerData.jobs) do
-        if jobName ~= Player.PlayerData.job.name then
-            availableJobs[jobName] = grade
+    if Player.PlayerData.jobs and next(Player.PlayerData.jobs) then
+        for jobName, grade in pairs(Player.PlayerData.jobs) do
+            if jobName ~= Player.PlayerData.job.name then
+                availableJobs[jobName] = grade
+            end
         end
     end
+    
     if Config.Debug then print(string.format("[JobSelector] Server: Sending available jobs to Player %d: %s", source, json.encode(availableJobs))) end
     return availableJobs
 end)
 
+-- This part of your script was already correct. It handles changing the job.
 RegisterNetEvent('job-selector:server:changeJob', function(jobName)
     local playerId = source
     local Player = exports.qbx_core:GetPlayer(playerId)
@@ -35,4 +39,3 @@ RegisterNetEvent('job-selector:server:changeJob', function(jobName)
         if Config.Debug then print("[JobSelector] Server ERROR: SetPlayerPrimaryJob failed. Reason: " .. (errorResult and errorResult.message or "Unknown")) end
     end
 end)
-

@@ -23,5 +23,6 @@ files {
 
 dependencies {
     'qbx_core',
-    'lb-phone'
+    'lb-phone',
+    'ox_lib'
 }
