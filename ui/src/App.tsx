@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import './App.css';
 import Frame from './components/Frame';
 
@@ -53,7 +53,8 @@ const App = () => {
                     </div>
                     <div className="button-wrapper">
                         {jobs && Object.keys(jobs).length > 0 ? (
-                            Object.entries(jobs).map(([jobName, grade]) => (
+                            Object.entries(jobs).map(([jobName, _]) => (
+
                                 <button key={jobName} onClick={() => handleSetJob(jobName)}>
                                     {jobName.charAt(0).toUpperCase() + jobName.slice(1)}
                                 </button>
