@@ -1,23 +1,26 @@
-if Config.Debug then print("[JobSelector] Server script has started successfully.") end
+if Config.Debug then print("[JobSelector] Server script has started successfully and is waiting for ox_lib.") end
 
-lib.callback.register('job-selector:server:getAvailableJobs', function(source)
-    local Player = exports.qbx_core:GetPlayer(source)
-    if not Player then return {} end
+AddEventHandler('ox_lib:ready', function()
+    if Config.Debug then print("[JobSelector] ox_lib is ready. Registering server callbacks.") end
 
-    local availableJobs = {}
-    if Player.PlayerData.jobs and next(Player.PlayerData.jobs) then
-        for jobName, grade in pairs(Player.PlayerData.jobs) do
-            if jobName ~= Player.PlayerData.job.name then
-                availableJobs[jobName] = grade
+    lib.callback.register('job-selector:server:getAvailableJobs', function(source)
+        local Player = exports.qbx_core:GetPlayer(source)
+        if not Player then return {} end
+
+        local availableJobs = {}
+        if Player.PlayerData.jobs and next(Player.PlayerData.jobs) then
+            for jobName, grade in pairs(Player.PlayerData.jobs) do
+                if jobName ~= Player.PlayerData.job.name then
+                    availableJobs[jobName] = grade
+                end
             end
         end
-    end
-    
-    if Config.Debug then print(string.format("[JobSelector] Server: Sending available jobs to Player %d: %s", source, json.encode(availableJobs))) end
-    return availableJobs
+        
+        if Config.Debug then print(string.format("[JobSelector] Server: Sending available jobs to Player %d: %s", source, json.encode(availableJobs))) end
+        return availableJobs
+    end)
 end)
 
--- This part of your script was already correct. It handles changing the job.
 RegisterNetEvent('job-selector:server:changeJob', function(jobName)
     local playerId = source
     local Player = exports.qbx_core:GetPlayer(playerId)
@@ -39,3 +42,4 @@ RegisterNetEvent('job-selector:server:changeJob', function(jobName)
         if Config.Debug then print("[JobSelector] Server ERROR: SetPlayerPrimaryJob failed. Reason: " .. (errorResult and errorResult.message or "Unknown")) end
     end
 end)
+
