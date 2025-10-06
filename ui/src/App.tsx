@@ -1,11 +1,12 @@
-import { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import './App.css';
 import Frame from './components/Frame';
 
 const devMode = !window?.['invokeNative'];
 
+// We keep this function for simple NUI callbacks like requesting jobs or setting a job
 async function fetchNui<T>(eventName: string, data: unknown = {}): Promise<T> {
-    const resourceName = window.GetParentResourceName ? window.GetParentResourceName() : 'qbx_multijob_app';
+    const resourceName = (window as any).GetParentResourceName ? (window as any).GetParentResourceName() : 'qbx_multijob_app';
     const resp = await fetch(`https://${resourceName}/${eventName}`, {
         method: 'post',
         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
@@ -18,21 +19,29 @@ const App = () => {
     const [jobs, setJobs] = useState<{ [key: string]: number }>({});
 
     useEffect(() => {
-        if (devMode) {
-            setJobs({ police: 4, taxi: 0 });
-            document.body.style.visibility = 'visible';
-            return;
-        }
+        // This function will handle messages sent from the LUA script (SendNUIMessage)
+        const handleMessage = (event: MessageEvent) => {
+            const { action, jobs } = event.data;
+            if (action === 'setJobs') {
+                setJobs(jobs);
+            }
+        };
 
-        fetchNui<{ [key: string]: number }>('getJobs').then(setJobs);
-    }, []);
+        // Add the event listener to listen for NUI messages from the client script
+        window.addEventListener('message', handleMessage);
+
+        // When the app first opens, send a message to the client script telling it to request the jobs from the server
+        fetchNui('requestJobs');
+
+        // This is a cleanup function that runs when the app is closed. It removes the event listener to prevent memory leaks.
+        return () => {
+            window.removeEventListener('message', handleMessage);
+        };
+    }, []); // The empty array ensures this effect only runs once when the app opens
 
     const handleSetJob = (jobName: string) => {
-        if (!devMode) {
-            fetchNui('setJob', { jobName });
-        } else {
-            console.log(`(Dev Mode) Would be setting active job to ${jobName}`);
-        }
+        // This part remains the same, as it's a simple one-way message
+        fetchNui('setJob', { jobName });
     };
 
     return (
@@ -44,7 +53,7 @@ const App = () => {
                     </div>
                     <div className="button-wrapper">
                         {jobs && Object.keys(jobs).length > 0 ? (
-                            Object.entries(jobs).map(([jobName]) => ( 
+                            Object.entries(jobs).map(([jobName, grade]) => (
                                 <button key={jobName} onClick={() => handleSetJob(jobName)}>
                                     {jobName.charAt(0).toUpperCase() + jobName.slice(1)}
                                 </button>

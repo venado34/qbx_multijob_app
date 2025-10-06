@@ -4,9 +4,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
     background-color: var(--background-primary);
-    color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 .app-wrapper {
@@ -15,46 +15,51 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    padding-top: 10vh;
+    justify-content: center;
     gap: 3rem;
 }
 
-.header {
-    text-align: center;
-}
-
-.title {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
+.header,
 .button-wrapper {
     display: flex;
     flex-direction: column;
+    text-align: center;
+    gap: 0.2rem;
+}
+
+.button-wrapper {
     gap: 1rem;
 }
 
-button {
-    width: 16rem;
-    padding: 1rem;
-    background-color: var(--background-highlight);
+.title {
+    font-size: 1.4rem;
+    font-weight: 700;
     color: var(--text-primary);
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-button:hover {
-    filter: brightness(0.9);
 }
 
 .subtitle {
     font-size: 1rem;
+    font-weight: 400;
     color: var(--text-secondary);
+}
+
+button {
+    width: 14rem;
+    height: 3.25rem;
+    background-color: var(--background-highlight);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s ease-in-out;
+    user-select: none;
+}
+
+button:hover {
+    filter: brightness(0.8);
 }
 
 .dev-wrapper {
@@ -63,6 +68,5 @@ button:hover {
     justify-content: center;
     width: 100vw;
     height: 100vh;
-    background-color: #333;
 }
 

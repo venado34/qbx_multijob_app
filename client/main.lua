@@ -20,20 +20,22 @@ local function AddApp()
 end
 AddApp()
 
--- This function is called by the UI when it needs the job list.
-RegisterNUICallback('getJobs', function(data, cb)
-    -- Create a temporary event handler to wait for the server's response.
-    local function handleJobsResponse(availableJobs)
-        if Config.Debug then print("[JobSelector] Client: Received jobs from server: " .. json.encode(availableJobs)) end
-        cb(availableJobs)
-        -- Clean up the event handler after we get the response to prevent memory leaks.
-        RemoveEventHandler('job-selector:client:receiveAvailableJobs', handleJobsResponse)
-    end
+-- This is now a permanent, secure event handler to receive the job list from the server
+RegisterNetEvent('job-selector:client:receiveAvailableJobs', function(availableJobs)
+    if Config.Debug then print("[JobSelector] Client: Received jobs from server: " .. json.encode(availableJobs)) end
+    -- Send the received jobs to the UI via a standard NUI message
+    SendNUIMessage({
+        action = 'setJobs',
+        jobs = availableJobs
+    })
+end)
 
-    -- Register the handler and then trigger the server event to ask for the jobs.
-    AddEventHandler('job-selector:client:receiveAvailableJobs', handleJobsResponse)
-    if Config.Debug then print("[JobSelector] Client: Requesting available jobs from server.") end
+-- This function is called by the UI when it opens and wants to get the list of jobs
+RegisterNUICallback('requestJobs', function(data, cb)
+    if Config.Debug then print("[JobSelector] Client: UI is requesting jobs. Forwarding request to server.") end
+    -- Tell the server to send us the jobs. The response will be handled by the NetEvent above.
     TriggerServerEvent('job-selector:server:requestAvailableJobs')
+    cb('ok') -- Immediately acknowledge the UI's request
 end)
 
 -- This function is called by the UI when a job button is clicked.
