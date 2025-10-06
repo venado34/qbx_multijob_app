@@ -1,0 +1,16 @@
+.phone-frame {
+    width: 375px;
+    height: 812px;
+    border: 16px solid black;
+    border-radius: 40px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    overflow: hidden;
+    position: relative;
+    background-color: #fff;
+}
+
+.phone-content {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
