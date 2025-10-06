@@ -1,26 +1,28 @@
-if Config.Debug then print("[JobSelector] Server script has started.") end
+if Config.Debug then print("[JobSelector] Server script has started and is waiting for QBCore to be ready.") end
 
--- This event listens for a request from the client to get the available jobs.
-RegisterNetEvent('job-selector:server:requestJobs', function()
-    local source = source
-    local Player = exports.qbx_core:GetPlayer(source)
-    if not Player then return end
+-- This event handler ensures that the code inside only runs after QBCore is fully loaded.
+AddEventHandler('QBCore:Ready', function()
+    if Config.Debug then print("[JobSelector] ### QBCore IS READY! ### Registering server callbacks.") end
 
-    local availableJobs = {}
-    -- Check if the player has any jobs listed in their data.
-    if Player.PlayerData.jobs and next(Player.PlayerData.jobs) then
-        -- Loop through all the player's jobs.
-        for jobName, grade in pairs(Player.PlayerData.jobs) do
-            -- Only add the job to the list if it is NOT their current active job.
-            if jobName ~= Player.PlayerData.job.name then
-                availableJobs[jobName] = grade
+    -- This is the standard QBCore way to create a callback that the client can request data from.
+    QBCore.Functions.CreateCallback('job-selector:server:getAvailableJobs', function(source, cb)
+        local Player = exports.qbx_core:GetPlayer(source)
+        if not Player then
+            cb({})
+            return
+        end
+
+        local availableJobs = {}
+        if Player.PlayerData.jobs and next(Player.PlayerData.jobs) then
+            for jobName, grade in pairs(Player.PlayerData.jobs) do
+                if jobName ~= Player.PlayerData.job.name then
+                    availableJobs[jobName] = grade
+                end
             end
         end
-    end
-    
-    if Config.Debug then print(string.format("[JobSelector] Server: Sending jobs to Player %d: %s", source, json.encode(availableJobs))) end
-    -- Send the final list of switchable jobs back to the specific client that requested them.
-    TriggerClientEvent('job-selector:client:receiveJobs', source, availableJobs)
+        
+        cb(availableJobs)
+    end)
 end)
 
 -- This event is triggered by the client when a job button is pressed.
